@@ -24,6 +24,5 @@ services:
       MONITORS: |
         Pixel-8-Johann.fritz.box|https://uptime-kuma.schauer.to/api/push/OxmNfD7hmk
         Pixel-8-Elisabeth.fritz.box|https://uptime-kuma.schauer.to/api/push/KNmJ8PmRRZ
-        s7.lan|https://uptime-kuma.schauer.to/api/push/jEyukRTSt9?status=up&msg=OK&ping=
-        uplink2.lan|https://uptime-kuma.schauer.to/api/push/xwG98XRM5tEaNHK4mj1Mxkxu2OCaRk62?status=up&msg=OK&ping=
-
+        s7.lan|https://uptime-kuma.schauer.to/api/push/jEyukRTSt9
+        uplink2.lan|https://uptime-kuma.schauer.to/api/push/xwG98XRM5tEaNHK4mj1Mxkxu2OCaRk62

@@ -1,8 +1,6 @@
 services:
   kuma-pusher:
     build: .
-    dns:
-      - 10.1.0.2
     container_name: kuma-pusher
     restart: unless-stopped
 
@@ -14,7 +12,7 @@ services:
       - NET_RAW
 
     environment:
-      INTERVAL: "5"
+      INTERVAL: "30"
       PING_COUNT: "1"
       PING_TIMEOUT_S: "1"
       FORCE_IPV4: "true"
@@ -25,4 +23,4 @@ services:
         Pixel-8-Johann.fritz.box|https://uptime-kuma.schauer.to/api/push/OxmNfD7hmk
         Pixel-8-Elisabeth.fritz.box|https://uptime-kuma.schauer.to/api/push/KNmJ8PmRRZ
         s7.lan|https://uptime-kuma.schauer.to/api/push/jEyukRTSt9
-        uplink2.lan|https://uptime-kuma.schauer.to/api/push/xwG98XRM5tEaNHK4mj1Mxkxu2OCaRk62
+        # uplink2.lan|https://uptime-kuma.schauer.to/api/push/xwG98XRM5tEaNHK4mj1Mxkxu2OCaRk62

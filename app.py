@@ -3,8 +3,7 @@
 Python ICMP pinger / TCP checker -> Uptime Kuma pusher
 Config via env:
   MONITORS: newline-separated entries:
-    "host|push_url"           ICMP ping (default, backward compat)
-    "host|push_url|ping"      ICMP ping (explicit)
+    "host|push_url|ping"      ICMP ping
     "host|push_url|tcp:PORT"  TCP connect to PORT
   INTERVAL: seconds between checks (default 30)
   PING_COUNT: pings per cycle, ICMP only (default 1)
@@ -23,7 +22,7 @@ SEND_DOWN = os.getenv("SEND_DOWN", "true").lower() == "true"
 
 raw_monitors = os.getenv("MONITORS", "").strip()
 if not raw_monitors:
-    print("ERROR: MONITORS is empty. Provide lines like 'host|push_url' or 'host|push_url|tcp:PORT'", file=sys.stderr)
+    print("ERROR: MONITORS is empty. Provide lines like 'host|push_url|ping' or 'host|push_url|tcp:PORT'", file=sys.stderr)
     sys.exit(1)
 
 # Each entry: (display_name, host, tcp_port_or_None, push_base_url)
@@ -33,12 +32,12 @@ for line in raw_monitors.splitlines():
     if not line or line.startswith("#"):
         continue
     parts = line.split("|")
-    if len(parts) < 2:
-        print(f"WARN: skipping malformed line: {line}", file=sys.stderr)
+    if len(parts) != 3:
+        print(f"WARN: skipping malformed line (expected host|push_url|check): {line}", file=sys.stderr)
         continue
     host = parts[0].strip()
     base = parts[1].strip()
-    check = parts[2].strip() if len(parts) >= 3 else "ping"
+    check = parts[2].strip()
 
     tcp_port = None
     if check == "ping":
@@ -47,9 +46,11 @@ for line in raw_monitors.splitlines():
         try:
             tcp_port = int(check[4:])
         except ValueError:
-            print(f"WARN: invalid tcp check '{check}' for {host}, falling back to ping", file=sys.stderr)
+            print(f"ERROR: invalid tcp check '{check}' for {host}, skipping", file=sys.stderr)
+            continue
     else:
-        print(f"WARN: unknown check type '{check}' for {host}, falling back to ping", file=sys.stderr)
+        print(f"ERROR: unknown check type '{check}' for {host}, skipping", file=sys.stderr)
+        continue
 
     name = f"{host}:{tcp_port}" if tcp_port is not None else host
     MONITORS.append((name, host, tcp_port, base))

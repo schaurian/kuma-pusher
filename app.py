@@ -3,8 +3,9 @@
 Python ICMP pinger / TCP checker -> Uptime Kuma pusher
 Config via env:
   MONITORS: newline-separated entries:
-    "host|https://uptime-kuma/api/push/<token>"          (ICMP ping)
-    "host:port|https://uptime-kuma/api/push/<token>"     (TCP check)
+    "host|push_url"           ICMP ping (default, backward compat)
+    "host|push_url|ping"      ICMP ping (explicit)
+    "host|push_url|tcp:PORT"  TCP connect to PORT
   INTERVAL: seconds between checks (default 30)
   PING_COUNT: pings per cycle, ICMP only (default 1)
   PING_TIMEOUT_S: per-ping timeout seconds (default 1)
@@ -22,7 +23,7 @@ SEND_DOWN = os.getenv("SEND_DOWN", "true").lower() == "true"
 
 raw_monitors = os.getenv("MONITORS", "").strip()
 if not raw_monitors:
-    print("ERROR: MONITORS is empty. Provide lines like 'host|https://.../api/push/<token>'", file=sys.stderr)
+    print("ERROR: MONITORS is empty. Provide lines like 'host|push_url' or 'host|push_url|tcp:PORT'", file=sys.stderr)
     sys.exit(1)
 
 # Each entry: (display_name, host, tcp_port_or_None, push_base_url)
@@ -31,20 +32,27 @@ for line in raw_monitors.splitlines():
     line = line.strip()
     if not line or line.startswith("#"):
         continue
-    try:
-        target, base = line.split("|", 1)
-    except ValueError:
+    parts = line.split("|")
+    if len(parts) < 2:
         print(f"WARN: skipping malformed line: {line}", file=sys.stderr)
         continue
-    target = target.strip()
-    # Detect host:port — port is digits at the end after the last colon
+    host = parts[0].strip()
+    base = parts[1].strip()
+    check = parts[2].strip() if len(parts) >= 3 else "ping"
+
     tcp_port = None
-    host = target
-    m = re.match(r"^(.+):(\d+)$", target)
-    if m:
-        host = m.group(1)
-        tcp_port = int(m.group(2))
-    MONITORS.append((target, host, tcp_port, base.strip()))
+    if check == "ping":
+        pass
+    elif check.startswith("tcp:"):
+        try:
+            tcp_port = int(check[4:])
+        except ValueError:
+            print(f"WARN: invalid tcp check '{check}' for {host}, falling back to ping", file=sys.stderr)
+    else:
+        print(f"WARN: unknown check type '{check}' for {host}, falling back to ping", file=sys.stderr)
+
+    name = f"{host}:{tcp_port}" if tcp_port is not None else host
+    MONITORS.append((name, host, tcp_port, base))
 
 _TIME_REGEXES = [
     re.compile(r"time[=<]\s*([0-9]+(?:\.[0-9]+)?)\s*ms", re.IGNORECASE),
@@ -90,7 +98,6 @@ def ping_ms(host: str):
     return 0.0
 
 def tcp_ms(host: str, port: int):
-    family = socket.AF_INET if FORCE_IPV4 else socket.AF_UNSPEC
     try:
         start = time.monotonic()
         with socket.create_connection((host, port), timeout=PING_TIMEOUT_S):

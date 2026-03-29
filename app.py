@@ -3,8 +3,8 @@
 Python ICMP pinger / TCP checker -> Uptime Kuma pusher
 Config via env:
   MONITORS: newline-separated entries:
-    "host|push_url|ping"      ICMP ping
-    "host|push_url|tcp:PORT"  TCP connect to PORT
+    "host|ping|push_url"      ICMP ping
+    "host|tcp:PORT|push_url"  TCP connect to PORT
   INTERVAL: seconds between checks (default 30)
   PING_COUNT: pings per cycle, ICMP only (default 1)
   PING_TIMEOUT_S: per-ping timeout seconds (default 1)
@@ -22,7 +22,7 @@ SEND_DOWN = os.getenv("SEND_DOWN", "true").lower() == "true"
 
 raw_monitors = os.getenv("MONITORS", "").strip()
 if not raw_monitors:
-    print("ERROR: MONITORS is empty. Provide lines like 'host|push_url|ping' or 'host|push_url|tcp:PORT'", file=sys.stderr)
+    print("ERROR: MONITORS is empty. Provide lines like 'host|ping|push_url' or 'host|tcp:PORT|push_url'", file=sys.stderr)
     sys.exit(1)
 
 # Each entry: (display_name, host, tcp_port_or_None, push_base_url)
@@ -33,11 +33,11 @@ for line in raw_monitors.splitlines():
         continue
     parts = line.split("|")
     if len(parts) != 3:
-        print(f"WARN: skipping malformed line (expected host|push_url|check): {line}", file=sys.stderr)
+        print(f"WARN: skipping malformed line (expected host|check|push_url): {line}", file=sys.stderr)
         continue
     host = parts[0].strip()
-    base = parts[1].strip()
-    check = parts[2].strip()
+    check = parts[1].strip()
+    base = parts[2].strip()
 
     tcp_port = None
     if check == "ping":

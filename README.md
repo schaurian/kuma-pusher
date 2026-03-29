@@ -7,7 +7,7 @@ Monitors hosts via ICMP ping or TCP connect and pushes status to [Uptime Kuma](h
 Each monitor is one line in the `MONITORS` env var:
 
 ```
-host|https://uptime-kuma/api/push/<token>|<check>
+host|<check>|https://uptime-kuma/api/push/<token>
 ```
 
 **Check types:**
@@ -20,8 +20,8 @@ host|https://uptime-kuma/api/push/<token>|<check>
 **Examples:**
 
 ```
-my-server.lan|https://uptime-kuma.example.com/api/push/abc123|ping
-alexa.fritz.box|https://uptime-kuma.example.com/api/push/xyz789|tcp:4070
+my-server.lan|ping|https://uptime-kuma.example.com/api/push/abc123
+alexa.fritz.box|tcp:4070|https://uptime-kuma.example.com/api/push/xyz789
 ```
 
 ## Configuration
@@ -57,6 +57,6 @@ securityContext:
 
 ```bash
 docker run --cap-add NET_RAW \
-  -e MONITORS="my-host.lan|https://uptime-kuma.example.com/api/push/abc|ping" \
+  -e MONITORS="my-host.lan|ping|https://uptime-kuma.example.com/api/push/abc" \
   ghcr.io/schaurian/kuma-pusher
 ```
